@@ -12,17 +12,14 @@ Web-based dashboard for the RapidBuild platform. Allows users to create, manage,
 - **Zustand** for client state management
 - **Axios** with retry logic for API calls
 
-## Environment Variables
+## Configuration
 
-Create a `.env` file based on `.env.example`:
+**No environment variables needed!** The app automatically detects the environment:
 
-```bash
-# Development - uses local backend
-VITE_API_BASE_URL=http://localhost:8092/api/v1
+- **Development** (`npm run dev`): Uses `http://localhost:8092/api/v1`
+- **Production** (`npm run build`): Uses `https://api.rapidbuild.app/api/v1`
 
-# Production - uses deployed backend
-VITE_API_BASE_URL_PROD=https://api.rapidbuild.app/api/v1
-```
+This is configured in `src/lib/api.ts` and `src/lib/auth.ts` using Vite's `import.meta.env.DEV`.
 
 ## Development
 
@@ -46,9 +43,10 @@ npm run lint
 
 ```bash
 # Build optimized production bundle
-VITE_API_BASE_URL=$VITE_API_BASE_URL_PROD npm run build
+npm run build
 
 # Output will be in ./dist directory
+# Automatically uses https://api.rapidbuild.app
 ```
 
 The build is optimized with:

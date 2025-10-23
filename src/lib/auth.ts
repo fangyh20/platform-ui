@@ -1,7 +1,10 @@
 import axios from 'axios'
 import axiosRetry from 'axios-retry'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8092/api/v1'
+// Auto-detect environment: dev uses localhost, production uses api.rapidbuild.app
+const API_BASE_URL = import.meta.env.DEV
+  ? 'http://localhost:8092/api/v1'
+  : 'https://api.rapidbuild.app/api/v1'
 
 // Create axios instance for auth requests with retry logic
 const authAxios = axios.create({

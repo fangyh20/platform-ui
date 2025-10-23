@@ -1,8 +1,9 @@
 {
-  "name": "rapidbuild-frontend",
+  "name": "rapidbuild-platform-ui",
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "description": "RapidBuild Platform UI - Web app builder dashboard",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

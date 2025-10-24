@@ -72,7 +72,11 @@ export interface App {
   id: string
   user_id: string
   name: string
+  display_name?: string
   description: string
+  logo?: string
+  category?: string
+  color_scheme?: string
   status: string
   prod_version?: number
   created_at: string

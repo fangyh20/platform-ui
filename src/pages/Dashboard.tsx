@@ -63,6 +63,18 @@ export function Dashboard() {
     }
   }
 
+  const convertS3ToHTTPS = (s3URI: string | undefined): string | undefined => {
+    if (!s3URI) return undefined
+    // Convert s3://bucket/key to https://bucket.s3.amazonaws.com/key
+    if (s3URI.startsWith('s3://')) {
+      const parts = s3URI.replace('s3://', '').split('/')
+      const bucket = parts[0]
+      const key = parts.slice(1).join('/')
+      return `https://${bucket}.s3.amazonaws.com/${key}`
+    }
+    return s3URI
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm">
@@ -117,9 +129,26 @@ export function Dashboard() {
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center">
-                    <div className="bg-blue-100 rounded-lg p-3">
-                      <Folder className="h-6 w-6 text-blue-600" />
-                    </div>
+                    {app.logo ? (
+                      <div className="relative">
+                        <img
+                          src={convertS3ToHTTPS(app.logo)}
+                          alt={app.display_name || app.name}
+                          className="h-12 w-12 rounded-lg object-cover"
+                          onError={(e) => {
+                            // Fallback to folder icon if image fails to load
+                            const parent = e.currentTarget.parentElement
+                            if (parent) {
+                              parent.innerHTML = '<div class="bg-blue-100 rounded-lg p-3"><svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg></div>'
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="bg-blue-100 rounded-lg p-3">
+                        <Folder className="h-6 w-6 text-blue-600" />
+                      </div>
+                    )}
                   </div>
                   <span
                     className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
@@ -130,7 +159,9 @@ export function Dashboard() {
                   </span>
                 </div>
 
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{app.name}</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  {app.display_name || app.name}
+                </h3>
                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">{app.description}</p>
 
                 <div className="flex items-center text-xs text-gray-500">

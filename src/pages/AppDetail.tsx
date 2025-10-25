@@ -642,13 +642,14 @@ export function AppDetail() {
                             <span className="text-sm font-medium text-gray-900">
                               Version {version.version_number}
                             </span>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(version.status)}`}>
-                              {version.status}
-                            </span>
-                            {app?.prod_version === version.version_number && (
+                            {app?.prod_version === version.version_number ? (
                               <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 flex items-center">
                                 <Rocket className="h-3 w-3 mr-1" />
                                 Production
+                              </span>
+                            ) : (
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(version.status)}`}>
+                                {version.status}
                               </span>
                             )}
                           </div>
@@ -677,7 +678,7 @@ export function AppDetail() {
                   <div className="flex justify-end">
                     <div className="max-w-[85%] bg-yellow-100 border border-yellow-300 rounded-lg p-3">
                       <div className="space-y-1.5">
-                        {draftComments.map((comment: any) => (
+                        {draftComments.slice().reverse().map((comment: any) => (
                           <div
                             key={comment.id}
                             onClick={() => handleEditComment(comment)}

@@ -143,6 +143,8 @@ export const api = {
   getComments: (appId: string) => apiClient.get<Comment[]>(`/apps/${appId}/comments`),
   addComment: (appId: string, data: { page_path: string; element_path: string; content: string }) =>
     apiClient.post<Comment>(`/apps/${appId}/comments`, data),
+  updateComment: (appId: string, commentId: string, data: { content: string }) =>
+    apiClient.put<Comment>(`/apps/${appId}/comments/${commentId}`, data),
   deleteComment: (appId: string, commentId: string) =>
     apiClient.delete(`/apps/${appId}/comments/${commentId}`),
   getVersionComments: (appId: string, versionId: string) =>

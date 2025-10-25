@@ -38,6 +38,8 @@ export function AppDetail() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null)
   const [versionListRef, setVersionListRef] = useState<HTMLDivElement | null>(null)
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+  const [editingCommentText, setEditingCommentText] = useState('')
 
   const { data: app } = useQuery({
     queryKey: ['app', id],
@@ -95,6 +97,16 @@ export function AppDetail() {
           console.log('[AppDetail] Re-launching element selector after comment submission')
         }, 100)
       }
+    },
+  })
+
+  const updateCommentMutation = useMutation({
+    mutationFn: (data: { commentId: string; content: string }) =>
+      api.updateComment(id!, data.commentId, { content: data.content }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', id] })
+      setEditingCommentId(null)
+      setEditingCommentText('')
     },
   })
 
@@ -220,6 +232,25 @@ export function AppDetail() {
       element_path: 'general',
       content: actionRequest,
     })
+  }
+
+  const handleEditComment = (comment: any) => {
+    setEditingCommentId(comment.id)
+    setEditingCommentText(comment.content)
+  }
+
+  const handleUpdateComment = () => {
+    if (!editingCommentId || !editingCommentText.trim()) return
+
+    updateCommentMutation.mutate({
+      commentId: editingCommentId,
+      content: editingCommentText,
+    })
+  }
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null)
+    setEditingCommentText('')
   }
 
   const getStatusIcon = (status: string) => {
@@ -657,21 +688,28 @@ export function AppDetail() {
                   </h4>
                   <div className="space-y-2">
                     {draftComments.map((comment: any) => (
-                      <div key={comment.id} className="bg-white p-2 rounded shadow-sm relative group">
+                      <div
+                        key={comment.id}
+                        onClick={() => handleEditComment(comment)}
+                        className="bg-white p-1.5 rounded shadow-sm relative group cursor-pointer hover:bg-blue-50 transition-colors"
+                      >
                         <button
-                          onClick={() => deleteCommentMutation.mutate(comment.id)}
-                          className="absolute top-2 right-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            deleteCommentMutation.mutate(comment.id)
+                          }}
+                          className="absolute top-1.5 right-1.5 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
                           title="Delete comment"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3 w-3" />
                         </button>
                         {comment.element_path !== 'general' && (
-                          <div className="flex items-center mb-1 pr-6" title="Attached to element">
+                          <div className="flex items-center mb-0.5 pr-6" title="Attached to element">
                             <Target className="h-3 w-3 text-blue-500" />
                           </div>
                         )}
-                        <div className="text-sm text-gray-900 pr-6">{comment.content}</div>
-                        <div className="text-xs text-gray-400 mt-1">
+                        <div className="text-xs text-gray-900 pr-6 line-clamp-2">{comment.content}</div>
+                        <div className="text-xs text-gray-400 mt-0.5">
                           {new Date(comment.created_at).toLocaleString()}
                         </div>
                       </div>
@@ -681,54 +719,114 @@ export function AppDetail() {
               )}
 
 
-              {/* General Action Request Input (always visible at bottom) */}
+              {/* General Action Request Input / Edit Comment Area */}
               <div className="border-t p-4">
                 <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-2">Page/App Action Request</label>
-                    <div className="flex space-x-2">
-                      <input
-                        type="text"
-                        value={actionRequest}
-                        onChange={(e) => setActionRequest(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault()
-                            handleAddActionRequest()
-                          }
-                        }}
-                        placeholder="Add a new page, change color scheme, etc..."
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                      />
-                      <button
-                        onClick={handleAddActionRequest}
-                        disabled={!actionRequest.trim() || addCommentMutation.isPending}
-                        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
+                  {editingCommentId ? (
+                    // Edit Mode
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="flex items-center text-xs text-gray-600">
+                          Editing Comment
+                          {draftComments?.find((c: any) => c.id === editingCommentId)?.element_path !== 'general' && (
+                            <Target className="h-3 w-3 ml-1 text-blue-500" title="Attached to element" />
+                          )}
+                        </label>
+                      </div>
+                      <div className="flex space-x-2">
+                        <textarea
+                          value={editingCommentText}
+                          onChange={(e) => setEditingCommentText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.ctrlKey) {
+                              e.preventDefault()
+                              handleUpdateComment()
+                            } else if (e.key === 'Escape') {
+                              handleCancelEdit()
+                            }
+                          }}
+                          placeholder="Edit your comment..."
+                          rows={3}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="flex space-x-2 mt-2">
+                        <button
+                          onClick={handleCancelEdit}
+                          className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleUpdateComment}
+                          disabled={!editingCommentText.trim() || updateCommentMutation.isPending}
+                          className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center"
+                        >
+                          {updateCommentMutation.isPending ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Save
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    // Add New Comment Mode
+                    <>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-2">Page/App Action Request</label>
+                        <div className="flex space-x-2">
+                          <input
+                            type="text"
+                            value={actionRequest}
+                            onChange={(e) => setActionRequest(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault()
+                                handleAddActionRequest()
+                              }
+                            }}
+                            placeholder="Add a new page, change color scheme, etc..."
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          />
+                          <button
+                            onClick={handleAddActionRequest}
+                            disabled={!actionRequest.trim() || addCommentMutation.isPending}
+                            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
 
-                  {/* Build Version Button */}
-                  {draftComments && draftComments.length > 0 && (
-                    <button
-                      onClick={handleSendAllComments}
-                      disabled={createVersionMutation.isPending}
-                      className="w-full px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center justify-center"
-                    >
-                      {createVersionMutation.isPending ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Building...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4 mr-2" />
-                          Build Version ({draftComments.length} comments)
-                        </>
+                      {/* Build Version Button */}
+                      {draftComments && draftComments.length > 0 && (
+                        <button
+                          onClick={handleSendAllComments}
+                          disabled={createVersionMutation.isPending}
+                          className="w-full px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center justify-center"
+                        >
+                          {createVersionMutation.isPending ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Building...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="h-4 w-4 mr-2" />
+                              Build Version ({draftComments.length} comments)
+                            </>
+                          )}
+                        </button>
                       )}
-                    </button>
+                    </>
                   )}
                 </div>
               </div>

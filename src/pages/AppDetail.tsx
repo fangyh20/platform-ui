@@ -599,44 +599,45 @@ export function AppDetail() {
           {/* Action Tab */}
           {activeTab === 'action' && (
             <>
-              {/* Version History */}
-              <div ref={setVersionListRef} className="flex-1 overflow-auto p-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Version History</h3>
-                <div className="space-y-3">
-                  {versions?.slice().reverse().map((version: Version) => (
-                    <div key={version.id} className="space-y-2">
-                      {/* Comments or Requirements for this version */}
-                      {version.version_number === 1 && version.requirements ? (
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                          <h4 className="text-xs font-semibold text-gray-700 mb-2">Initial Requirements</h4>
-                          <p className="text-xs text-gray-600 whitespace-pre-wrap">{version.requirements}</p>
+              {/* Conversation */}
+              <div ref={setVersionListRef} className="flex-1 overflow-auto p-4 space-y-4">
+                {versions?.slice().reverse().map((version: Version) => (
+                  <div key={version.id} className="space-y-3">
+                    {/* User Message (Requirements/Comments) - Right aligned */}
+                    {version.version_number === 1 && version.requirements ? (
+                      <div className="flex justify-end">
+                        <div className="max-w-[85%] bg-blue-500 text-white rounded-lg p-3 text-xs whitespace-pre-wrap">
+                          {version.requirements}
                         </div>
-                      ) : commentsByVersion?.[version.id] && commentsByVersion[version.id].length > 0 ? (
-                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                          <h4 className="text-xs font-semibold text-gray-700 mb-2">
-                            Changes Requested ({commentsByVersion[version.id].length})
-                          </h4>
-                          <div className="space-y-2">
+                      </div>
+                    ) : commentsByVersion?.[version.id] && commentsByVersion[version.id].length > 0 ? (
+                      <div className="flex justify-end">
+                        <div className="max-w-[85%] bg-blue-500 text-white rounded-lg p-3">
+                          <div className="space-y-1.5">
                             {commentsByVersion[version.id].map((comment: any) => (
-                              <div key={comment.id} className="text-xs">
-                                <span className="text-gray-500 font-mono">[{comment.element_path}]</span>
-                                <p className="text-gray-700 mt-0.5">{comment.content}</p>
+                              <div key={comment.id} className="flex items-start gap-1.5 text-xs">
+                                {comment.element_path !== 'general' && (
+                                  <Target className="h-3 w-3 flex-shrink-0 mt-0.5" />
+                                )}
+                                <span>{comment.content}</span>
                               </div>
                             ))}
                           </div>
                         </div>
-                      ) : null}
+                      </div>
+                    ) : null}
 
-                      {/* Version Card */}
+                    {/* Version Card - Left aligned */}
+                    <div className="flex justify-start">
                       <div
-                        className={`border rounded-lg p-2 transition-colors ${
+                        className={`max-w-[85%] border rounded-lg p-2 bg-white transition-colors ${
                           viewingVersion === version.id
                             ? 'border-blue-500 bg-blue-50'
                             : 'border-gray-200'
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center space-x-2 flex-1 min-w-0">
                             {getStatusIcon(version.status)}
                             <span className="text-sm font-medium text-gray-900">
                               Version {version.version_number}
@@ -644,7 +645,6 @@ export function AppDetail() {
                             <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(version.status)}`}>
                               {version.status}
                             </span>
-                            {/* Production Badge */}
                             {app?.prod_version === version.version_number && (
                               <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 flex items-center">
                                 <Rocket className="h-3 w-3 mr-1" />
@@ -657,7 +657,7 @@ export function AppDetail() {
                             version.status === 'pending') && (
                             <button
                               onClick={() => handlePreviewVersion(version.id)}
-                              className="ml-2 px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700"
+                              className="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 flex-shrink-0"
                             >
                               View
                             </button>
@@ -669,48 +669,45 @@ export function AppDetail() {
                         </p>
                       </div>
                     </div>
-                  ))}
-
-                  {(!versions || versions.length === 0) && (
-                    <p className="text-sm text-gray-500 text-center py-8">No versions yet</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Draft Comments Display */}
-              {draftComments && draftComments.length > 0 && (
-                <div className="border-t p-3 bg-yellow-50 max-h-40 overflow-auto">
-                  <h4 className="text-xs font-medium text-gray-900 mb-2">
-                    Draft Comments ({draftComments.length})
-                  </h4>
-                  <div className="space-y-2">
-                    {draftComments.map((comment: any) => (
-                      <div
-                        key={comment.id}
-                        onClick={() => handleEditComment(comment)}
-                        className="bg-white p-1.5 rounded shadow-sm relative group cursor-pointer hover:bg-blue-50 transition-colors"
-                      >
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            deleteCommentMutation.mutate(comment.id)
-                          }}
-                          className="absolute top-1.5 right-1.5 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                          title="Delete comment"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                        <div className="flex items-start gap-1 pr-6">
-                          {comment.element_path !== 'general' && (
-                            <Target className="h-3 w-3 text-blue-500 flex-shrink-0 mt-0.5" title="Attached to element" />
-                          )}
-                          <div className="text-xs text-gray-900 line-clamp-2">{comment.content}</div>
-                        </div>
-                      </div>
-                    ))}
                   </div>
-                </div>
-              )}
+                ))}
+
+                {/* Draft Comments - Right aligned with yellow background */}
+                {draftComments && draftComments.length > 0 && (
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] bg-yellow-100 border border-yellow-300 rounded-lg p-3">
+                      <div className="space-y-1.5">
+                        {draftComments.map((comment: any) => (
+                          <div
+                            key={comment.id}
+                            onClick={() => handleEditComment(comment)}
+                            className="flex items-start gap-1.5 text-xs cursor-pointer hover:bg-yellow-200 p-1 rounded transition-colors relative group"
+                          >
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                deleteCommentMutation.mutate(comment.id)
+                              }}
+                              className="absolute top-1 right-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Delete comment"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                            {comment.element_path !== 'general' && (
+                              <Target className="h-3 w-3 flex-shrink-0 mt-0.5 text-gray-700" />
+                            )}
+                            <span className="text-gray-900 pr-5">{comment.content}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {(!versions || versions.length === 0) && (
+                  <p className="text-sm text-gray-500 text-center py-8">No versions yet</p>
+                )}
+              </div>
 
 
               {/* General Action Request Input / Edit Comment Area */}
@@ -800,22 +797,22 @@ export function AppDetail() {
                         </div>
                       </div>
 
-                      {/* Build Version Button */}
+                      {/* Send Button */}
                       {draftComments && draftComments.length > 0 && (
                         <button
                           onClick={handleSendAllComments}
                           disabled={createVersionMutation.isPending}
-                          className="w-full px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center justify-center"
+                          className="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center"
                         >
                           {createVersionMutation.isPending ? (
                             <>
                               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Building...
+                              Sending...
                             </>
                           ) : (
                             <>
                               <Send className="h-4 w-4 mr-2" />
-                              Build Version ({draftComments.length} comments)
+                              Send
                             </>
                           )}
                         </button>

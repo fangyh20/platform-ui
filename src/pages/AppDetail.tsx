@@ -657,7 +657,9 @@ export function AppDetail() {
                               </span>
                             )}
                           </div>
-                          {version.status === 'completed' && version.vercel_url && (
+                          {((version.status === 'completed' && version.vercel_url) ||
+                            version.status === 'building' ||
+                            version.status === 'pending') && (
                             <button
                               onClick={() => handlePreviewVersion(version.id)}
                               className="ml-2 px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700"

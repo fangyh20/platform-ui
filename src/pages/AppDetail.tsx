@@ -289,6 +289,13 @@ export function AppDetail() {
     }
   }, [currentViewingVersion?.status, currentViewingVersion?.vercel_url, currentViewingVersion?.id, previewUrl])
 
+  // Force view mode when switching to non-completed version
+  useEffect(() => {
+    if (currentViewingVersion && currentViewingVersion.status !== 'completed') {
+      setMode('view')
+    }
+  }, [currentViewingVersion?.id, currentViewingVersion?.status])
+
   // Enable/disable element picking in iframe when mode changes
   useEffect(() => {
     if (!iframeRef || !previewUrl) return
@@ -425,11 +432,17 @@ export function AppDetail() {
                 </button>
                 <button
                   onClick={() => setMode('edit')}
+                  disabled={!currentViewingVersion || currentViewingVersion.status !== 'completed'}
                   className={`px-4 py-2 text-sm font-medium rounded-md ${
                     mode === 'edit'
                       ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  title={
+                    !currentViewingVersion || currentViewingVersion.status !== 'completed'
+                      ? 'Edit mode is only available for completed versions'
+                      : 'Switch to edit mode'
+                  }
                 >
                   <Edit2 className="h-4 w-4 inline mr-2" />
                   Edit

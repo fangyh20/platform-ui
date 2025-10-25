@@ -127,8 +127,27 @@ export function AppDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['app', id] })
       queryClient.invalidateQueries({ queryKey: ['versions', id] })
+
+      // Open production URL in new tab after successful promotion
+      if (app?.production_url) {
+        window.open(`https://${app.production_url}`, '_blank', 'noopener,noreferrer')
+      }
     },
   })
+
+  const handlePublishClick = () => {
+    // If already the prod version, just open the URL
+    if (app?.prod_version === currentViewingVersion?.version_number) {
+      if (app?.production_url) {
+        window.open(`https://${app.production_url}`, '_blank', 'noopener,noreferrer')
+      }
+    } else {
+      // Otherwise, promote the version (which will open URL on success)
+      if (viewingVersion) {
+        promoteVersionMutation.mutate(viewingVersion)
+      }
+    }
+  }
 
   const handleCancelComment = () => {
     setCommentText('')
@@ -420,20 +439,17 @@ export function AppDetail() {
               {/* Publish to Production Button */}
               {viewingVersion && currentViewingVersion?.status === 'completed' && (
                 <button
-                  onClick={() => promoteVersionMutation.mutate(viewingVersion)}
-                  disabled={
-                    promoteVersionMutation.isPending ||
-                    app?.prod_version === currentViewingVersion?.version_number
-                  }
+                  onClick={handlePublishClick}
+                  disabled={promoteVersionMutation.isPending}
                   className={`px-4 py-2 text-sm font-medium rounded-md flex items-center ${
                     app?.prod_version === currentViewingVersion?.version_number
-                      ? 'bg-green-100 text-green-700 cursor-not-allowed'
+                      ? 'bg-green-600 text-white hover:bg-green-700'
                       : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
                   }`}
                   title={
                     app?.prod_version === currentViewingVersion?.version_number
-                      ? 'This version is already in production'
-                      : 'Publish this version to production'
+                      ? 'Open production site in new tab'
+                      : 'Publish this version to production and open in new tab'
                   }
                 >
                   {promoteVersionMutation.isPending ? (
@@ -443,8 +459,8 @@ export function AppDetail() {
                     </>
                   ) : app?.prod_version === currentViewingVersion?.version_number ? (
                     <>
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      In Production
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View Production
                     </>
                   ) : (
                     <>

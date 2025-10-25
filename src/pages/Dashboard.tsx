@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { api, type App } from '@/lib/api'
 import { authClient } from '@/lib/auth'
 import { useAuthStore } from '@/lib/store'
-import { Plus, Folder, Clock, AlertCircle } from 'lucide-react'
+import { Plus, Folder, Clock, AlertCircle, ExternalLink, Rocket } from 'lucide-react'
 
 export function Dashboard() {
   const navigate = useNavigate()
@@ -169,11 +169,29 @@ export function Dashboard() {
                   {new Date(app.created_at).toLocaleDateString()}
                 </div>
 
-                {app.prod_version && (
-                  <div className="mt-2 text-xs text-gray-500">
-                    Production: v{app.prod_version}
+                {/* Production URL */}
+                {app.production_url ? (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-500 flex items-center">
+                        <Rocket className="h-3 w-3 mr-1" />
+                        {app.prod_version ? `Production (v${app.prod_version})` : 'Not published yet'}
+                      </span>
+                    </div>
+                    {app.prod_version && (
+                      <a
+                        href={`https://${app.production_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 text-xs text-blue-600 hover:text-blue-800 flex items-center hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {app.production_url}
+                        <ExternalLink className="h-3 w-3 ml-1" />
+                      </a>
+                    )}
                   </div>
-                )}
+                ) : null}
               </Link>
             ))}
           </div>

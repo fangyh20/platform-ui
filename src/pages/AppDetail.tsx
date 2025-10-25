@@ -15,6 +15,8 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  Rocket,
+  ExternalLink,
 } from 'lucide-react'
 
 export function AppDetail() {
@@ -117,6 +119,14 @@ export function AppDetail() {
     mutationFn: () => api.deleteApp(id!),
     onSuccess: () => {
       navigate('/dashboard')
+    },
+  })
+
+  const promoteVersionMutation = useMutation({
+    mutationFn: (versionId: string) => api.promoteVersion(id!, versionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['app', id] })
+      queryClient.invalidateQueries({ queryKey: ['versions', id] })
     },
   })
 
@@ -353,7 +363,32 @@ export function AppDetail() {
                 <ArrowLeft className="h-5 w-5 mr-2" />
                 Back
               </button>
-              <h1 className="text-xl font-bold text-gray-900">{app?.name}</h1>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">{app?.name}</h1>
+                {/* Production URL */}
+                {app?.production_url && (
+                  <div className="flex items-center text-sm mt-1">
+                    {app.prod_version ? (
+                      <a
+                        href={`https://${app.production_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-green-600 hover:text-green-800 flex items-center hover:underline"
+                        title="Visit production site"
+                      >
+                        <Rocket className="h-3 w-3 mr-1" />
+                        {app.production_url}
+                        <ExternalLink className="h-3 w-3 ml-1" />
+                      </a>
+                    ) : (
+                      <span className="text-gray-500 flex items-center">
+                        <Rocket className="h-3 w-3 mr-1" />
+                        {app.production_url} (not published)
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center space-x-3">
@@ -381,6 +416,44 @@ export function AppDetail() {
                   Edit
                 </button>
               </div>
+
+              {/* Publish to Production Button */}
+              {viewingVersion && currentViewingVersion?.status === 'completed' && (
+                <button
+                  onClick={() => promoteVersionMutation.mutate(viewingVersion)}
+                  disabled={
+                    promoteVersionMutation.isPending ||
+                    app?.prod_version === currentViewingVersion?.version_number
+                  }
+                  className={`px-4 py-2 text-sm font-medium rounded-md flex items-center ${
+                    app?.prod_version === currentViewingVersion?.version_number
+                      ? 'bg-green-100 text-green-700 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
+                  }`}
+                  title={
+                    app?.prod_version === currentViewingVersion?.version_number
+                      ? 'This version is already in production'
+                      : 'Publish this version to production'
+                  }
+                >
+                  {promoteVersionMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Publishing...
+                    </>
+                  ) : app?.prod_version === currentViewingVersion?.version_number ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      In Production
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="h-4 w-4 mr-2" />
+                      Publish to Prod
+                    </>
+                  )}
+                </button>
+              )}
 
               <button
                 onClick={() => deleteAppMutation.mutate()}
@@ -515,6 +588,13 @@ export function AppDetail() {
                             <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(version.status)}`}>
                               {version.status}
                             </span>
+                            {/* Production Badge */}
+                            {app?.prod_version === version.version_number && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 flex items-center">
+                                <Rocket className="h-3 w-3 mr-1" />
+                                Production
+                              </span>
+                            )}
                           </div>
                           {version.status === 'completed' && version.vercel_url && (
                             <button

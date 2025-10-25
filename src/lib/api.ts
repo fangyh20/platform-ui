@@ -79,6 +79,7 @@ export interface App {
   color_scheme?: string
   status: string
   prod_version?: number
+  production_url?: string
   created_at: string
   updated_at: string
 }

@@ -140,11 +140,6 @@ export function AppDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['app', id] })
       queryClient.invalidateQueries({ queryKey: ['versions', id] })
-
-      // Open production URL in new tab after successful promotion
-      if (app?.production_url) {
-        window.open(`https://${app.production_url}`, '_blank', 'noopener,noreferrer')
-      }
     },
   })
 

@@ -17,6 +17,7 @@ import {
   Clock,
   Rocket,
   ExternalLink,
+  Target,
 } from 'lucide-react'
 
 export function AppDetail() {
@@ -664,7 +665,11 @@ export function AppDetail() {
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
-                        <div className="text-xs text-gray-500 mb-1 pr-6">[{comment.element_path}]</div>
+                        {comment.element_path !== 'general' && (
+                          <div className="flex items-center mb-1 pr-6" title="Attached to element">
+                            <Target className="h-3 w-3 text-blue-500" />
+                          </div>
+                        )}
                         <div className="text-sm text-gray-900 pr-6">{comment.content}</div>
                         <div className="text-xs text-gray-400 mt-1">
                           {new Date(comment.created_at).toLocaleString()}

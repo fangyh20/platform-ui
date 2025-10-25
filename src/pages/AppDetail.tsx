@@ -703,14 +703,11 @@ export function AppDetail() {
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>
-                        {comment.element_path !== 'general' && (
-                          <div className="flex items-center mb-0.5 pr-6" title="Attached to element">
-                            <Target className="h-3 w-3 text-blue-500" />
-                          </div>
-                        )}
-                        <div className="text-xs text-gray-900 pr-6 line-clamp-2">{comment.content}</div>
-                        <div className="text-xs text-gray-400 mt-0.5">
-                          {new Date(comment.created_at).toLocaleString()}
+                        <div className="flex items-start gap-1 pr-6">
+                          {comment.element_path !== 'general' && (
+                            <Target className="h-3 w-3 text-blue-500 flex-shrink-0 mt-0.5" title="Attached to element" />
+                          )}
+                          <div className="text-xs text-gray-900 line-clamp-2">{comment.content}</div>
                         </div>
                       </div>
                     ))}

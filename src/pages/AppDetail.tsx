@@ -281,8 +281,8 @@ export function AppDetail() {
     }
   }
 
-  const latestVersion = versions?.[versions.length - 1]
-  const latestCompletedVersion = versions?.slice().reverse().find(v => v.status === 'completed')
+  const latestVersion = versions?.[0]
+  const latestCompletedVersion = versions?.find(v => v.status === 'completed')
   const currentViewingVersion = versions?.find(v => v.id === viewingVersion)
 
   // Auto-select latest completed version on mount
